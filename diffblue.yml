@@ -1,0 +1,785 @@
+buildCmd: ./gradlew build
+testCmd: true
+skipVerification: true
+cbmcArguments:
+  # Do not generate coverage comments on generated tests.
+  java-generate-no-comments: true
+  # Constrain the size of arrays created in the analyzed code.
+  java-max-vla-length: 100000
+phases:
+  -
+    # Phase 0 PRETTY, SIMPLE and SMART - pretty tests, do not test private methods directly, Smart-Harness
+    timeout: 180
+    cbmcArguments:
+      # Use simple models first containers (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # Instrument the file as opposed to the function only
+      cover-only: file
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Instantiate classes using the simplest constructor strategy
+      smart-harness: simplest-constructor-and-nondet
+  -
+    # Phase 1 PRETTY AND COMPLEX - standard models only, pretty tests, do not test private methods directly, input factory
+    timeout: 180
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 2
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+      # Limit input factory recursive depth (default 0 = no recursion allowed)
+      java-test-input-factory-bmc-recursion-limit: 4
+  -
+    # Phase 2 FIFO Strategy - pretty tests, do not test private methods directly, fifo
+    timeout: 100
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Add constraint that strings are printable
+      max-nondet-string-length: 100
+      # Explores the program tree breadth-first.
+      paths: fifo
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: false
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    # Phase 3 Exceptions - do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 30
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    # Phase 4 Direct testing - test private methods directly, increased reflection
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # If the logs contain output of the following then proceed to phase X
+    nextPhase:
+      # If the function is not analysable then do not pass onto the next phase
+      not_analyzed: null
+  -
+    # PHASE 5 Mocking - aggressive mocking, do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 3000
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Only load the class (and related inner/outer classes) containing the method under test,
+      load-containing-class-only: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 100
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+units:
+ - target:
+   - dir: hystrix-contrib/hystrix-javanica/build/classes/java/main
+     file: com/netflix/hystrix/contrib/javanica/exception/ExceptionUtils.class
+     sourceDir: hystrix-contrib/hystrix-javanica/src/main/java
+     sourceFile: com/netflix/hystrix/contrib/javanica/exception/ExceptionUtils.java
+   - dir: hystrix-contrib/hystrix-javanica/build/classes/java/main
+     file: com/netflix/hystrix/contrib/javanica/exception/CommandActionExecutionException.class
+     sourceDir: hystrix-contrib/hystrix-javanica/src/main/java
+     sourceFile: com/netflix/hystrix/contrib/javanica/exception/CommandActionExecutionException.java
+ - target:
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/HystrixArchaiusHelper.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/HystrixArchaiusHelper.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/HystrixArchaiusHelper$LazyHolder.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/HystrixArchaiusHelper.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixDynamicProperties.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixDynamicProperties.java
+ - target:
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCommandResponseFromCache$2.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCommandResponseFromCache.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/concurrency/HystrixRequestVariableHolder.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/concurrency/HystrixRequestVariableHolder.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixThreadPool.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixThreadPool.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/concurrency/HystrixConcurrencyStrategy$1.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/concurrency/HystrixConcurrencyStrategy.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/BucketedCumulativeCounterStream$1.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/BucketedCumulativeCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/HystrixPlugins$LazyHolder.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/HystrixPlugins.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/HystrixPlugins.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/HystrixPlugins.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$20.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$12.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixRequestCache.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixRequestCache.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/util/InternMap$ValueConstructor.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/util/InternMap.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$18.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixEventType.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixEventType.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$2.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$5.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$3.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixThreadPoolKey.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixThreadPoolKey.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$ExecutionHookApplication.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCommandProperties.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCommandProperties.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixRequestLog.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixRequestLog.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/exception/HystrixRuntimeException.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/exception/HystrixRuntimeException.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixDynamicProperties$Util.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixDynamicProperties.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$HystrixObservableTimeoutOperator.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/HystrixCommandStartStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/HystrixCommandStartStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCounters.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCounters.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixPropertiesStrategy.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixPropertiesStrategy.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$22.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$11.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty$ChainBuilder.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixPropertiesFactory.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixPropertiesFactory.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCollapserKey.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCollapserKey.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixMetrics.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixMetrics.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$16.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$24.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCommandKey.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCommandKey.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCommandResponseFromCache$1.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCommandResponseFromCache.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/CachedValuesHistogram.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/CachedValuesHistogram.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$DeprecatedOnRunHookApplication.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixPropertiesStrategyDefault.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixPropertiesStrategyDefault.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/concurrency/HystrixRequestVariableDefault.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/concurrency/HystrixRequestVariableDefault.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$7.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCommandProperties$ExecutionIsolationStrategyHystrixProperty$1.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCommandProperties.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/HystrixCommandEvent.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/HystrixCommandEvent.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/ExecutionResult.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/ExecutionResult.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/ExecutionResult$EventCounts.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/ExecutionResult.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/HystrixThreadPoolStartStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/HystrixThreadPoolStartStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCommandProperties$Setter.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCommandProperties.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixDynamicProperty.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixDynamicProperty.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/RollingThreadPoolEventCounterStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/RollingThreadPoolEventCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$TryableSemaphoreActual.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/HystrixThreadEventStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/HystrixThreadEventStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$19.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/HystrixEventStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/HystrixEventStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixProperty.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixProperty.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/HystrixCommandCompletion.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/HystrixCommandCompletion.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$FallbackHookApplication.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCommandKey$Factory.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCommandKey.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/BucketedRollingCounterStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/BucketedRollingCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$ExecutionHookDeprecationWrapper.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/util/InternMap.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/util/InternMap.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty$ChainProperty$1.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$23.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCircuitBreaker$NoOpCircuitBreaker.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCircuitBreaker.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/CumulativeThreadPoolEventCounterStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/CumulativeThreadPoolEventCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/BucketedCounterStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/BucketedCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$21.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$DeprecatedOnFallbackHookApplication.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty$ChainHystrixProperty.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCommandMetrics.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCommandMetrics.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$17.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCommandGroupKey.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCommandGroupKey.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixPropertiesThreadPoolDefault.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixPropertiesThreadPoolDefault.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$10.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/HystrixThreadPoolCompletionStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/HystrixThreadPoolCompletionStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixThreadPool$Factory.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixThreadPool.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/RollingDistributionStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/RollingDistributionStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixThreadPool$HystrixThreadPoolDefault.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixThreadPool.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/RollingDistributionStream$5.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/RollingDistributionStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$15.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/BucketedCumulativeCounterStream$2.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/BucketedCumulativeCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCircuitBreaker.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCircuitBreaker.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixPropertiesCommandDefault.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixPropertiesCommandDefault.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/RollingConcurrencyStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/RollingConcurrencyStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/RollingCommandUserLatencyDistributionStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/RollingCommandUserLatencyDistributionStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$14.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCommandResponseFromCache$3.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCommandResponseFromCache.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/RollingCommandLatencyDistributionStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/RollingCommandLatencyDistributionStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/BucketedCumulativeCounterStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/BucketedCumulativeCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/RollingCommandMaxConcurrencyStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/RollingCommandMaxConcurrencyStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty$ChainProperty.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixDynamicProperties.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixDynamicProperties.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCircuitBreaker$Factory.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCircuitBreaker.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/BucketedRollingCounterStream$3.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/BucketedRollingCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/HystrixCommandCompletionStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/HystrixCommandCompletionStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/BucketedRollingCounterStream$2.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/BucketedRollingCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$8.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisherThreadPool.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisherThreadPool.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/RollingCommandEventCounterStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/RollingCommandEventCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/executionhook/HystrixCommandExecutionHookDefault.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/executionhook/HystrixCommandExecutionHookDefault.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/executionhook/HystrixCommandExecutionHook.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/executionhook/HystrixCommandExecutionHook.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisherCommandDefault.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisherCommandDefault.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisher.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisher.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixThreadPoolKey$Factory.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixThreadPoolKey.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$9.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$4.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisherFactory.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisherFactory.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/BucketedCounterStream$1.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/BucketedCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisherCommand.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisherCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/CumulativeCommandEventCounterStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/CumulativeCommandEventCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCommandResponseFromCache.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCommandResponseFromCache.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisherThreadPoolDefault.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisherThreadPoolDefault.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisherDefault.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/metrics/HystrixMetricsPublisherDefault.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/HealthCountsStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/HealthCountsStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCommandProperties$ExecutionIsolationStrategyHystrixProperty.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCommandProperties.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixThreadPoolProperties$Setter.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixThreadPoolProperties.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/eventnotifier/HystrixEventNotifierDefault.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/eventnotifier/HystrixEventNotifierDefault.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixThreadPoolProperties.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixThreadPoolProperties.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCircuitBreaker$HystrixCircuitBreakerImpl.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCircuitBreaker.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/RollingThreadPoolMaxConcurrencyStream.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/RollingThreadPoolMaxConcurrencyStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty$ChainLink.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/concurrency/HystrixRequestVariableHolder$RVCacheKey.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/concurrency/HystrixRequestVariableHolder.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/eventnotifier/HystrixEventNotifier.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/eventnotifier/HystrixEventNotifier.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixRequestCache$RequestCacheKey.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixRequestCache.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixThreadPoolMetrics.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixThreadPoolMetrics.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/BucketedCounterStream$2.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/BucketedCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/concurrency/HystrixRequestContext.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/concurrency/HystrixRequestContext.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$6.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$1.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$13.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty$1.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/properties/HystrixPropertiesChainedProperty.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/concurrency/HystrixConcurrencyStrategy.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/concurrency/HystrixConcurrencyStrategy.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/metric/consumer/BucketedRollingCounterStream$1.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/metric/consumer/BucketedRollingCounterStream.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/exception/HystrixRuntimeException$FailureType.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/exception/HystrixRuntimeException.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$TryableSemaphore.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/AbstractCommand$25.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/AbstractCommand.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCommandProperties$ExecutionIsolationStrategy.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCommandProperties.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/util/PlatformSpecific.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/util/PlatformSpecific.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/HystrixCircuitBreaker$HystrixCircuitBreakerImpl$1.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/HystrixCircuitBreaker.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/concurrency/HystrixConcurrencyStrategyDefault.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/concurrency/HystrixConcurrencyStrategyDefault.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/concurrency/HystrixRequestVariable.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/concurrency/HystrixRequestVariable.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/strategy/concurrency/HystrixLifecycleForwardingRequestVariable.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/strategy/concurrency/HystrixLifecycleForwardingRequestVariable.java
+ - target:
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/config/HystrixConfiguration.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/config/HystrixConfiguration.java
+ - target:
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/util/PlatformSpecific.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/util/PlatformSpecific.java
+   - dir: hystrix-core/build/classes/java/main
+     file: com/netflix/hystrix/util/PlatformSpecific$Platform.class
+     sourceDir: hystrix-core/src/main/java
+     sourceFile: com/netflix/hystrix/util/PlatformSpecific.java
